@@ -15,8 +15,8 @@ try:
     prediction_time = datetime.now()
     with open('moose.jpg', 'rb') as file:
         photo = file.read()
-    sql_stmt = f"INSERT INTO predictions(prediction_time, photo) VALUES('{prediction_time}', '{photo}')"
-    cur.execute(sql_stmt)
+    sql_stmt = f"INSERT INTO predictions(prediction_time, photo) VALUES(%s,%s)"
+    cur.execute(sql_stmt, (prediction_time.strftime("%Y-%m-%d %H:%M:%S"), photo))
     mydb.commit()
 except mysql.connector.Error as error:
     print("Failed inserting BLOB data into MySQL table {}".format(error))

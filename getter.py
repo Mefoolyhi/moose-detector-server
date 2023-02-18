@@ -14,10 +14,10 @@ try:
     response = cur.fetchall()
 
     for row in response:
-        print(row[0], row[1])
+        print(row)
 
 except mysql.connector.Error as error:
-    print("Failed inserting BLOB data into MySQL table {}".format(error))
+    print("Failed getting BLOB data into MySQL table {}".format(error))
 
 finally:
     if mydb.is_connected():
