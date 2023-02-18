@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import mysql.connector
 
 try:
@@ -11,13 +9,13 @@ try:
 
     cur = mydb.cursor()
     cur.execute("USE DB")
-
-    prediction_time = datetime.now()
-    with open('moose.jpg', 'rb') as file:
-        photo = file.read()
-    sql_stmt = f"INSERT INTO predictions(prediction_time, photo) VALUES('{prediction_time}', '{photo}')"
+    sql_stmt = f"SELECT * FROM predictions"
     cur.execute(sql_stmt)
-    mydb.commit()
+    response = cur.fetchall()
+
+    for row in response:
+        print(row[0], row[1])
+
 except mysql.connector.Error as error:
     print("Failed inserting BLOB data into MySQL table {}".format(error))
 
