@@ -1,1 +1,6 @@
 mysql-connector-python
+flask
+Flask[async]
+Flask-HTTPAuth
+opencv-contrib-python
+zmq
