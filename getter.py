@@ -1,11 +1,12 @@
 import mysql.connector
 from datetime import datetime
+import os
 
 try:
     mydb = mysql.connector.connect(
-        host="",
-        user="",
-        password=""
+        host=os.environ['DB_host'],
+        user=os.environ['DB_user'],
+        password=os.environ['DB_password']
     )
 
     cur = mydb.cursor()

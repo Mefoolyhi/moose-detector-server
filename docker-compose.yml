@@ -3,6 +3,6 @@ version: '3.8'
 services:
 
   env_printer:
-    image: "moose_detection"
+    image: "moose-detector"
     env_file:
       - .env

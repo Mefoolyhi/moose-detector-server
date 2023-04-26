@@ -1,6 +1,6 @@
-mysql-connector-python
-flask
-Flask[async]
+mysql-connector-python~=8.0.32
 Flask-HTTPAuth
-opencv-contrib-python
-zmq
+Flask-SQLAlchemy
+flask~=2.2.3
+PyMySQL
+SQLAlchemy~=2.0.4
