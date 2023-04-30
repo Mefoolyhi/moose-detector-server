@@ -7,13 +7,12 @@ addr = ("127.0.0.1", 9235)
 
 file_name = 'moose.jpg'
 
-s.sendto(file_name.encode(), addr)
-
 with open(file_name, 'rb') as f:
     data = bytearray(f.read(buf))
-    print(data)
     while data:
         if s.sendto(data, addr):
-            print("sending ...")
+            print(f"sending {data}")
             data = bytearray(f.read(buf))
+
+s.sendto('EOF'.encode(), addr)
 s.close()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 from datetime import datetime
 import os
 from flask import Flask, jsonify, request, make_response, Blueprint
@@ -67,11 +67,13 @@ def get_response():
 
 
 @app.route('/all')
+@auth.login_required
 def get_all_data():
     return Prediction.jsonify_all()
 
 
 @app.route('/photo/<camera_id>', methods=['POST'])
+@auth.login_required
 def insert_picture(camera_id):
     try:
         prediction_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

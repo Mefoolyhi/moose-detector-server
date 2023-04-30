@@ -1,19 +1,40 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import socket
+from datetime import datetime
+import mysql.connector
 import os
 
-with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-    s.bind(("127.0.0.1", 9235))
-    print("UDP server up and listening")
+with mysql.connector.connect(
+  host="localhost", #envs
+  user="root",
+  password="password"
+) as mydb:
 
-    addr = ("127.0.0.1", 9235)
-    buf = 1024
+    with mydb.cursor() as cur:
+        cur.execute("USE DB")
 
-    data, addr = s.recvfrom(buf)
-    print("Received File:", data.strip())
-    with open('result_' + data.strip().decode(), 'wb') as f:
-        data, _ = s.recvfrom(buf)
-        while data:
-            f.write(data)
-            s.settimeout(5)
-            data, addr = s.recvfrom(buf)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.bind(("127.0.0.1", 9235)) #envs
+            print("UDP server up and listening")
+            buf = 1024 #envs
+
+            f = []
+
+            while True:
+                data, _ = s.recvfrom(buf)
+                while data:
+                    try:
+                        if data.strip().decode() == 'EOF':
+                            print('File Received')
+                            prediction_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            sql_stmt = f"INSERT INTO prediction(prediction_time, photo) VALUES(%s,%s)"
+                            cur.execute(sql_stmt, (prediction_time, b''.join(f)))
+                            mydb.commit()
+                            print('File downloaded')
+                            f = []
+                    except UnicodeDecodeError as e:
+                        pass
+                    f.append(data)
+                    data, addr = s.recvfrom(buf)
+
+
