@@ -1,0 +1,139 @@
+openapi: 3.0.0
+info:
+  title: Moose Detector Server
+  description: Server for posting images by UDP and getting classification results by REST
+  version: 0.1.0
+paths:
+  /results:
+    get:
+      summary: Return list if classified pictures by camera and date
+      parameters:
+        - name: camera_id
+          in: query
+          required: true
+          description: A id of camera from which photos were taken
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+            example: 1
+        - name: date_to
+          in: query
+          required: false
+          description: Date to which photos were taken
+          schema:
+            type: string
+            example: "2017-01-01"
+            format: date
+            pattern: "YYYY-MM-DD"
+            minLength: 0
+            maxLength: 10
+        - name: date_from
+          in: query
+          required: false
+          description: Date from which photos were taken
+          schema:
+            type: string
+            example: "2017-01-01"
+            format: date
+            pattern: "YYYY-MM-DD"
+            minLength: 0
+            maxLength: 10
+      responses:
+        '200':
+          description: A classification object with picture
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfClassificationObjects'
+
+  /all:
+    get:
+      summary: Return list if ALL classified pictures
+      responses:
+        '200':
+          description: A classification object with picture
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfClassificationObjects'
+
+  /photo/{camera_id}:
+    post:
+      summary: Post a picture from camera on server
+      parameters:
+        - name: camera_id
+          in: path
+          required: true
+          description: A id of camera from which photos were taken
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: byte
+      responses:
+        '204':
+          description: Photo putted in database successfully
+        '502':
+          description: Server cannot do a classification or put in database
+
+
+components:
+  schemas:
+    ArrayOfClassificationObjects:
+      type: array
+      items:
+        $ref: '#/components/schemas/ClassificationObject'
+
+
+    ClassificationObject:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 4
+        prediction_time:
+          type: string
+          example: "2017-01-01 23:56:17"
+          format: date
+          pattern: "YYYY-MM-DD HH:MM:SS"
+        camera_id:
+          type: integer
+          format: int64
+          example: 1
+        photo:
+          type: string
+          format: byte
+        lynx_count:
+          type: integer
+          format: int64
+          example: 1
+        hog_count:
+          type: integer
+          format: int64
+          example: 0
+        bear_count:
+          type: integer
+          format: int64
+          example: 1
+        moose_count:
+          type: integer
+          format: int64
+          example: 2
+
+
+
+

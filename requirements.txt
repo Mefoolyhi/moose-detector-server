@@ -4,3 +4,4 @@ Flask-SQLAlchemy
 flask~=2.2.3
 PyMySQL
 SQLAlchemy~=2.0.4
+flask_swagger_ui

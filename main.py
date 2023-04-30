@@ -1,15 +1,26 @@
 from datetime import datetime
 import os
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 from sqlalchemy import exc
 import codecs
+from flask_swagger_ui import get_swaggerui_blueprint
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger.yaml'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "Moose Detector"
+    }
+)
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
 
 class Prediction(db.Model):
@@ -39,11 +50,15 @@ class Prediction(db.Model):
         return jsonify(predictions=[pred.as_dict() for pred in cls.query.all()])
 
 
+def to_date(date_string):
+    return datetime.strptime(date_string, "%Y-%m-%d").date()
+
+
 @app.route('/results')
 @auth.login_required
 def get_response():
-    date_to = request.args.get('dateTo', default=datetime.now().strftime("%Y-%m-%d"), type=str)
-    date_from = request.args.get('dateFrom', default='2023-02-18', type=str)
+    date_to = request.args.get('dateTo', default=datetime.now().strftime("%Y-%m-%d"), type=to_date)
+    date_from = request.args.get('dateFrom', default='2023-02-18', type=to_date)
     camera_id = request.args.get('cameraId', default=1, type=int)
     data = Prediction.query.filter_by(camera_id=camera_id).filter(
         Prediction.prediction_time.between(date_from, date_to)).all()
@@ -55,7 +70,7 @@ def get_all_data():
     return Prediction.jsonify_all()
 
 
-@app.route('/photo/<camera_id>')
+@app.route('/photo/<camera_id>', methods=['POST'])
 def insert_picture(camera_id):
     try:
         prediction_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
