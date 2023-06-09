@@ -1,12 +1,15 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.9
 from datetime import datetime
 import os
-from flask import Flask, jsonify, request, make_response, Blueprint
+from flask import Flask, jsonify, request, make_response, redirect, flash, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
+from flask_admin import Admin, BaseView, expose
+from flask_admin.contrib.sqla import ModelView
 from sqlalchemy import exc
 import codecs
 from flask_swagger_ui import get_swaggerui_blueprint
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -14,6 +17,7 @@ db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 SWAGGER_URL = '/swagger'
 API_URL = '/static/swagger.yaml'
+app.secret_key = b'a secret key'
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
@@ -22,6 +26,47 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     }
 )
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
+app.config['FLASK_ADMIN_SWATCH'] = 'readable'
+UPLOAD_FOLDER = 'photos_buffer'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'webm', 'mov'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+class PredictionModelView(ModelView):
+    page_size = 50
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_filters = ['camera_id', 'prediction_time', 'lynx_count', 'moose_count', 'hog_count', 'bear_count']
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('Вы не загрузили файл', 'error')
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            #тут надо будет вызвать метод нарезки для видео
+            # а тут позвать для каждого кадра метод предсказания и выбрать лучший
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            flash('Файл загружен', 'success')
+        else:
+            flash('Файл пустой или не существует', 'error')
+        return redirect('/upload')
+    return redirect('admin/upload')
+
+
+class UploadView(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('upload_index.html')
 
 
 class Prediction(db.Model):
@@ -72,7 +117,7 @@ def get_all_data():
     return Prediction.jsonify_all()
 
 
-@app.route('/photo/<camera_id>', methods=['POST'])
+@app.route('/photo/<camera_id>', methods=['GET', 'POST'])
 @auth.login_required
 def insert_picture(camera_id):
     try:
@@ -99,4 +144,7 @@ def authenticate(username, password):
 
 
 if __name__ == "__main__":
+    admin = Admin(app, name='moose_detector', template_mode='bootstrap3')
+    admin.add_view(PredictionModelView(Prediction, db.session))
+    admin.add_view(UploadView(name='Upload', endpoint='upload'))
     app.run()

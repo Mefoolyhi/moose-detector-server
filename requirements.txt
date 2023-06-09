@@ -1,7 +1,9 @@
 mysql-connector-python~=8.0.32
 Flask-HTTPAuth
 Flask-SQLAlchemy
+Flask-Admin
 flask~=2.2.3
 PyMySQL
 SQLAlchemy~=2.0.4
 flask_swagger_ui
+Werkzeug~=2.2.3

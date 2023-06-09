@@ -1,0 +1,53 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{% with errors = get_flashed_messages(category_filter=["error"]) %}
+        {% if errors %}
+        <div class="alert alert-danger alert-dismissible fade show"
+             role="alert">
+            <ul>
+                {%- for msg in errors %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% with messages = get_flashed_messages(category_filter=["success"]) %}
+        {% if messages %}
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+            <ul>
+                {%- for msg in messages %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+        {% endif %}
+        {% endwith %}
+  <p>На этой странице можно загрузить файл и отправить его на классификацию</p><br>
+<p>Название файла должно быть строго на английском</p><br>
+<p>Разрешенные форматы: png, jpg, jpeg, mp4, webm, mov</p><br>
+  <form action = "http://localhost:5000/upload" method = "POST"
+         enctype = "multipart/form-data">
+      <label>
+          Дата наблюдения <br>
+          <input type="date"  name="prediction_date" value="2023-06-09"/>
+
+      </label> <br>
+      <label>
+          Порядковый номер камеры, с которой взято наблюдение <br>
+          <input type="number" min="1" name="camera_id" value="1">
+      </label> <br>
+
+      <input type = "file" name = "file" /><br>
+
+         <input type = "submit"/>
+  </form>
+{% endblock %}

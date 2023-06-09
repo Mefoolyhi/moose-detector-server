@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.9
 import socket
 from datetime import datetime
 import mysql.connector
@@ -26,6 +26,7 @@ with mysql.connector.connect(
                     try:
                         if data.strip().decode() == 'EOF':
                             print('File Received')
+                            # а тут позвать для каждого кадра метод предсказания и выбрать лучший
                             prediction_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             sql_stmt = f"INSERT INTO prediction(prediction_time, photo) VALUES(%s,%s)"
                             cur.execute(sql_stmt, (prediction_time, b''.join(f)))
