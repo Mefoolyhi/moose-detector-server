@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.9
 from datetime import datetime
 import os
-from flask import Flask, jsonify, request, make_response, redirect, flash, render_template
+from flask import Flask, jsonify, request, make_response, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 from flask_admin import Admin, BaseView, expose
