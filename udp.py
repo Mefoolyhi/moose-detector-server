@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.11
 import socket
 from datetime import datetime
 import mysql.connector

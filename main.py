@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.11
 from datetime import datetime
 import os
 from flask import Flask, jsonify, request, make_response, Blueprint
