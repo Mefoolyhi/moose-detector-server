@@ -1,15 +1,17 @@
 #!/usr/bin/env python3.9
 from datetime import datetime
 import os
-from flask import Flask, jsonify, request, make_response, redirect, flash, render_template
+from flask import Flask, jsonify, request, make_response, redirect, flash, Markup, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from sqlalchemy import exc
 import codecs
+from PIL import Image
 from flask_swagger_ui import get_swaggerui_blueprint
-from werkzeug.utils import secure_filename
+from predictor import process_photo, process_video, stop_processing
+from flask_babel import Babel
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -28,13 +30,20 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
 app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 app.config['FLASK_ADMIN_SWATCH'] = 'readable'
 UPLOAD_FOLDER = 'photos_buffer'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'webm', 'mov'}
+ALLOWED_EXTENSIONS_IMAGE = {'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS_VIDEO = {'mp4', 'webm', 'mov'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+babel = Babel(app)
 
 
-def allowed_file(filename):
+def allowed_image_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_IMAGE
+
+
+def allowed_image_video(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_VIDEO
 
 
 class PredictionModelView(ModelView):
@@ -44,6 +53,16 @@ class PredictionModelView(ModelView):
     can_delete = False
     column_filters = ['camera_id', 'prediction_time', 'lynx_count', 'moose_count', 'hog_count', 'bear_count']
 
+    def _list_thumbnail(self, context, model, name):
+        return Markup(
+            '<img src="data:image/jpg;base64, ' +
+            codecs.encode(model.photo, encoding='base64').decode('utf-8') + '" width="500"/>'
+        )
+
+    column_formatters = {
+        'photo': _list_thumbnail
+    }
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -51,11 +70,19 @@ def upload_file():
         if 'file' not in request.files:
             flash('Вы не загрузили файл', 'error')
         file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            #тут надо будет вызвать метод нарезки для видео
-            # а тут позвать для каждого кадра метод предсказания и выбрать лучший
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        if file:
+            if allowed_image_file(file.filename):
+                process_photo(Image.open(file), request.form['camera_id'])
+                preds = stop_processing(request.form['camera_id'],
+                                        request.form['prediction_date'])
+                for pred in preds:
+                    insert_prediction(Prediction(**pred))
+            elif allowed_image_video(file.filename):
+                preds = process_video(file.stream, request.form['camera_id'])
+                for pred in preds:
+                    insert_prediction(Prediction(**pred))
+            else:
+                flash('Недопустимый формат файла', 'error')
             flash('Файл загружен', 'success')
         else:
             flash('Файл пустой или не существует', 'error')
@@ -78,6 +105,7 @@ class Prediction(db.Model):
     hog_count = db.Column(db.Integer, nullable=False, default=0)
     bear_count = db.Column(db.Integer, nullable=False, default=0)
     moose_count = db.Column(db.Integer, nullable=False, default=0)
+    other_animal_count = db.Column(db.Integer, nullable=False, default=0)
 
     def as_dict(self):
         return {
@@ -88,7 +116,8 @@ class Prediction(db.Model):
             'lynx_count': self.lynx_count,
             'hog_count': self.hog_count,
             'bear_count': self.bear_count,
-            'moose_count': self.moose_count
+            'moose_count': self.moose_count,
+            'other_animal_count': self.other_animal_count
         }
 
     @classmethod
@@ -101,7 +130,7 @@ def to_date(date_string):
 
 
 @app.route('/results')
-@auth.login_required
+#@auth.login_required
 def get_response():
     date_to = request.args.get('dateTo', default=datetime.now().strftime("%Y-%m-%d"), type=to_date)
     date_from = request.args.get('dateFrom', default='2023-02-18', type=to_date)
@@ -112,13 +141,13 @@ def get_response():
 
 
 @app.route('/all')
-@auth.login_required
+#@auth.login_required
 def get_all_data():
     return Prediction.jsonify_all()
 
 
 @app.route('/photo/<camera_id>', methods=['GET', 'POST'])
-@auth.login_required
+#@auth.login_required
 def insert_picture(camera_id):
     try:
         prediction_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -131,6 +160,15 @@ def insert_picture(camera_id):
         return make_response('', 204)
     except exc.SQLAlchemyError:
         return make_response('', 502)
+
+
+def insert_prediction(prediction):
+    try:
+        db.session.add(prediction)
+        db.session.commit()
+    except exc.SQLAlchemyError as e:
+        print('Sorry Error while inserting')
+        print(e)
 
 
 @auth.verify_password
