@@ -12,6 +12,7 @@ from PIL import Image
 from flask_swagger_ui import get_swaggerui_blueprint
 from predictor import process_photo, process_video, stop_processing
 from flask_babel import Babel
+from log import log
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -51,7 +52,7 @@ class PredictionModelView(ModelView):
     can_create = False
     can_edit = False
     can_delete = False
-    column_filters = ['camera_id', 'prediction_time', 'lynx_count', 'moose_count', 'hog_count', 'bear_count']
+    column_filters = ['camera_id', 'prediction_time', 'animal_type', 'animal_count']
 
     def _list_thumbnail(self, context, model, name):
         return Markup(
@@ -72,18 +73,21 @@ def upload_file():
         file = request.files['file']
         if file:
             if allowed_image_file(file.filename):
-                process_photo(Image.open(file), request.form['camera_id'])
-                preds = stop_processing(request.form['camera_id'],
+                process_photo(Image.open(file), request.form['camera_id'], request.form['animal_type'])
+                pred = stop_processing(request.form['camera_id'],
                                         request.form['prediction_date'])
-                for pred in preds:
-                    insert_prediction(Prediction(**pred))
+                if insert_prediction(Prediction(**pred)):
+                    flash('Файл загружен', 'success')
+                else:
+                    flash('Кокая-то ошипка, попробуйте потом, попейте чаюб', 'error')
             elif allowed_image_video(file.filename):
-                preds = process_video(file.stream, request.form['camera_id'])
-                for pred in preds:
-                    insert_prediction(Prediction(**pred))
+                pred = process_video(file.stream, request.form['camera_id'], request.form['animal_type'])
+                if insert_prediction(Prediction(**pred)):
+                    flash('Файл загружен', 'success')
+                else:
+                    flash('Кокая-то ошипка, попробуйте потом, попейте чаюб', 'error')
             else:
                 flash('Недопустимый формат файла', 'error')
-            flash('Файл загружен', 'success')
         else:
             flash('Файл пустой или не существует', 'error')
         return redirect('/upload')
@@ -101,11 +105,8 @@ class Prediction(db.Model):
     prediction_time = db.Column(db.DateTime, nullable=False)
     camera_id = db.Column(db.Integer, nullable=False)
     photo = db.Column(db.LargeBinary(length=(2 ** 32) - 1), nullable=False)
-    lynx_count = db.Column(db.Integer, nullable=False, default=0)
-    hog_count = db.Column(db.Integer, nullable=False, default=0)
-    bear_count = db.Column(db.Integer, nullable=False, default=0)
-    moose_count = db.Column(db.Integer, nullable=False, default=0)
-    other_animal_count = db.Column(db.Integer, nullable=False, default=0)
+    animal_type = db.Column(db.String, nullable=False)
+    animal_count = db.Column(db.Integer, nullable=False, default=0)
 
     def as_dict(self):
         return {
@@ -113,11 +114,8 @@ class Prediction(db.Model):
             'prediction_time': self.prediction_time,
             'camera_id': self.camera_id,
             'photo': codecs.encode(self.photo, encoding='base64').decode('utf-8'),
-            'lynx_count': self.lynx_count,
-            'hog_count': self.hog_count,
-            'bear_count': self.bear_count,
-            'moose_count': self.moose_count,
-            'other_animal_count': self.other_animal_count
+            'animal_type': self.animal_type,
+            'animal_count': self.animal_count
         }
 
     @classmethod
@@ -166,9 +164,12 @@ def insert_prediction(prediction):
     try:
         db.session.add(prediction)
         db.session.commit()
+        return True
     except exc.SQLAlchemyError as e:
         print('Sorry Error while inserting')
         print(e)
+        log('INSERT PREDICITION\n' + str(e))
+        return False
 
 
 @auth.verify_password

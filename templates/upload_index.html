@@ -41,6 +41,12 @@
           <input type="date"  name="prediction_date" value="2023-06-09"/>
 
       </label> <br>
+      <p>Выберите животного:</p>
+        <p><input type="search" list="character" name="animal_type">
+          <datalist id="character">
+            <option value="moose">Лось</option>
+            <option value="wild boar">Кабан</option>
+           </datalist></p>
       <label>
           Порядковый номер камеры, с которой взято наблюдение <br>
           <input type="number" min="1" name="camera_id" value="1">

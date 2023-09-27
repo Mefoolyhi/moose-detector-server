@@ -8,10 +8,8 @@ CREATE TABLE `prediction` (
   `prediction_time` datetime NOT NULL,
   `camera_id` INT NOT NULL DEFAULT 1,
   `photo` LONGBLOB NOT NULL,
-  `moose_count` INT DEFAULT 0,
-  `bear_count` INT DEFAULT 0,
-  `hog_count` INT DEFAULT 0,
-  `lynx_count` INT DEFAULT 0,
+  `animal_type` TEXT NOT NULL,
+  `animal_count` INT DEFAULT 0,
   PRIMARY KEY (`id`)
 );
 

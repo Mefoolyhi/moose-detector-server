@@ -16,6 +16,7 @@ from shapely.ops import unary_union
 from torchvision import models
 import torchvision.transforms as tt
 import sys
+from log import log
 
 sys.path.insert(0, './yolov5')
 class_names = ['brown bear', 'empty', 'lynx', 'moose', 'wild boar', 'other']
@@ -174,6 +175,7 @@ def load_detector(model_file):
     detector = PTDetector(model_file)
     elapsed = time.time() - start_time
     print('Loaded model in {}'.format(humanfriendly.format_timespan(elapsed)))
+    log('LOAD DETECTOR\noaded model in ' + humanfriendly.format_timespan(elapsed))
     return detector
 
 
@@ -256,6 +258,7 @@ def load_and_run_detector(image,
 
     padding = 50
     print(detection_results)
+    log('LOAD & RUN DETECTION\ndetection_results=' + str(detection_results))
     bbox = []
     for detection in detection_results[0]['detections']:
         if int(detection['category']) != 1 or detection['conf'] < render_confidence_threshold:
@@ -278,6 +281,7 @@ def load_and_run_detector(image,
         i += 1
 
     print(bbox)
+    log('LOAD & RUN DETECTION\nbbox=' + str(bbox))
 
     preds = {'lynx': 0, 'brown bear': 0, 'moose': 0, 'wild boar': 0, 'other': 0}
     for b in bbox:
@@ -287,6 +291,7 @@ def load_and_run_detector(image,
         score = prediction[class_id].item()
         category_name = class_names[class_id]
         print(category_name, score)
+        log('LOAD & RUN DETECTION\ncategory_name=' + category_name + '\nscore= ' + str(score))
         if category_name in preds.keys():
             preds[category_name] += 1
 
@@ -319,6 +324,7 @@ def load_and_run_detector(image,
             font=font)
 
     print(preds)
+    log('LOAD & RUN DETECTION\npreds=' + str(preds))
     return preds, image
 
 # ...def load_and_run_detector()
