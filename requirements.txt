@@ -21,8 +21,9 @@ matplotlib==3.7.1
 pandas==2.0.2
 seaborn==0.12.2
 scipy==1.10.1
-ultralytics==8.0.122
+ultralytics==8.0.145
 requests==2.31.0
 tqdm==4.65.0
 psutil==5.9.5
 thop==0.1.1.post2209072238
+openpyxl==3.1.2

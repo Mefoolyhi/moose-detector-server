@@ -1,11 +1,7 @@
-FROM mysql/mysql-server
-ADD schema.sql /docker-entrypoint-initdb.d
-EXPOSE 3306
-#
-#FROM python:latest
-#COPY requirements.txt requirements.txt
-#RUN pip install --no-cache-dir -r requirements.txt
-#COPY main.py main.py
-#COPY udp.py udp.py
-#COPY script.sh script.sh
-#CMD ./script.sh
+FROM python:3.8
+WORKDIR /app
+COPY requirements.txt /app/
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app/
+RUN chmod +x /app/script.sh

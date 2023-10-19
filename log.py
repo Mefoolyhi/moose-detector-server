@@ -4,6 +4,6 @@ filename = 'log.txt'
 
 
 def log(log):
-    with open(filename, 'w') as f:
-        f.write(str(datetime.datetime.now()) + '\n' + log + '\n')
+    with open(filename, 'a') as f:
+        f.write(str(datetime.datetime.now()) + '\n' + str(log) + '\n')
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/bin/bash
 import socket
 from PIL import Image
 from predictor import process_photo, stop_processing
@@ -17,16 +17,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         while data:
             try:
                 if data.strip().decode() == 'EOF':
-                    process_photo(Image.open(b''.join(f)), 1)
+                    process_photo(Image.open(b''.join(f)), 1, 'moose')
                     print('File downloaded')
                     log('UDP\nFile downloaded')
                     f = []
             except UnicodeDecodeError as e:
                 pass
             f.append(data)
-            log('UDP\nRecieving file')
+            log('UDP\nReceiving file')
             data, addr = s.recvfrom(buf)
         else:
-            stop_processing(1)
+            stop_processing(1, 'forest')
 
 

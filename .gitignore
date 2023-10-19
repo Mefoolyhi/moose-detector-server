@@ -2,3 +2,7 @@
 venv
 .env
 photos_buffer
+init_scripts
+__pycache__
+ResNet50_AdamW_1e-05_CosineAnnealingLR_plus_flip.pth
+md_v5b.0.0.pt

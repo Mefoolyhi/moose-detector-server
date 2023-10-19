@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./main.py &
-./udp.py &
+python /app/main.py &
+python /app/udp.py &
 wait -n
 exit $?

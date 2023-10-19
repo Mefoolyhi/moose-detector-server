@@ -41,16 +41,25 @@
           <input type="date"  name="prediction_date" value="2023-06-09"/>
 
       </label> <br>
-      <p>Выберите животного:</p>
-        <p><input type="search" list="character" name="animal_type">
-          <datalist id="character">
-            <option value="moose">Лось</option>
-            <option value="wild boar">Кабан</option>
-           </datalist></p>
+<!--      <p>Выберите животного:</p>-->
+<!--        <p><input type="search" list="character" name="animal_type">-->
+<!--          <datalist id="character">-->
+<!--            <option value="moose">Лось</option>-->
+<!--            <option value="wild boar">Кабан</option>-->
+<!--           </datalist></p>-->
       <label>
           Порядковый номер камеры, с которой взято наблюдение <br>
           <input type="number" min="1" name="camera_id" value="1">
       </label> <br>
+      <p>
+          <label>Тип местности</label>
+          <input type="search" list="area" name="area_type">
+          <datalist id="area">
+              <option value="swamp">Болото</option>
+              <option value="forest">Лес</option>
+              <option value="field">Поле</option>
+          </datalist>
+      </p>
 
       <input type = "file" name = "file" /><br>
 

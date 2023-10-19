@@ -326,5 +326,3 @@ def load_and_run_detector(image,
     print(preds)
     log('LOAD & RUN DETECTION\npreds=' + str(preds))
     return preds, image
-
-# ...def load_and_run_detector()

@@ -1,0 +1,58 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{% with errors = get_flashed_messages(category_filter=["error"]) %}
+        {% if errors %}
+        <div class="alert alert-danger alert-dismissible fade show"
+             role="alert">
+            <ul>
+                {%- for msg in errors %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% with messages = get_flashed_messages(category_filter=["success"]) %}
+        {% if messages %}
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+            <ul>
+                {%- for msg in messages %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+        {% endif %}
+        {% endwith %}
+<!--  <p>На этой странице можно скачать отчет</p><br>-->
+<!--  <a href=" {{ url_for('download_file', filename='report_new.xlsm') }}" class="btn btn-primary">Download</a>-->
+<p>На этой странице можно скачать отчет.</p>
+<form action="http://localhost:5000/report" method="POST">
+    <p>
+    <label>Дата начала наблюдений</label>
+    <input type="date" name="report_start_date" value="2023-06-09"/>
+    </p>
+    <p>
+    <label>Дата окончания наблюдений (включительно)</label>
+    <input type="date" name="report_end_date" value="2023-06-10"/>
+    </p>
+
+    <p>
+        <label>Порядковый номер камер, с которой взято наблюдение</label>
+        <select class="selectpicker" name="camera_ids" id="cameras" multiple>
+            {% for camera_id in camera_ids %}
+            <option value="{{ camera_id }}">{{ camera_id }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <button type="submit">Сформировать отчет</button>
+
+</form>
+{% endblock %}

@@ -25,11 +25,12 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, './yolov5')
 class_names = ['brown bear', 'empty', 'lynx', 'moose', 'wild boar', 'other']
 
-model = models.resnet50(pretrained=True)
+# model = models.resnet50(pretrained=True)
+model = models.resnet50(weights="IMAGENET1K_V1")
 model.fc = torch.nn.Linear(model.fc.in_features, 6)
 loss = torch.nn.CrossEntropyLoss()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-checkpoint_path = "ResNet50_AdamW_1e-05_CosineAnnealingLR_plus_flip.pth"
+checkpoint_path = "yolov5/ResNet50_AdamW_1e-05_CosineAnnealingLR_plus_flip.pth"
 checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint['model_state_dict'])
 model = model.to(device)
@@ -386,7 +387,7 @@ def process_animal(an):
         print(len(file))
         for f in file:
             image_file = os.path.join(dir, an, f)
-            total_acc, total_animal = load_and_run_detector(detector=load_detector('md_v5b.0.0.pt'),
+            total_acc, total_animal = load_and_run_detector(detector=load_detector('yolov5/md_v5b.0.0.pt'),
                                                             im_file=image_file,
                                                             render_confidence_threshold=0.4,
                                                             label=an, total_acc=0,
